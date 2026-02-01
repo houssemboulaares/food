@@ -118,6 +118,16 @@ io.on("connection", (socket) => {
   });
 });
 
+function computeRecommendation(session, loc, restaurants) {
+  const { rankedRestaurants } = scoreRestaurants(
+    restaurants,
+    session.preferences,
+    loc,
+  );
+  const validResults = rankedRestaurants.filter((r) => r.score > -500);
+  return validResults.length > 0 ? validResults[0] : rankedRestaurants[0];
+}
+
 async function startRecommendation(code, session) {
   try {
     session.status = "deciding";
@@ -134,35 +144,14 @@ async function startRecommendation(code, session) {
     const restaurants = await findRestaurants(lat, lng);
     console.log(`Found ${restaurants.length} restaurants`);
 
-    // 3. Score Restaurants based on Preferences (using new Scoring Engine)
-    const { rankedRestaurants, logs } = scoreRestaurants(
-      restaurants,
-      session.preferences,
-      loc,
+    // 3. Compute Recommendation using scoring engine
+    const winner = computeRecommendation(session, loc, restaurants);
+    session.restaurant = winner;
+    console.log(
+      `Selected restaurant: ${session.restaurant.name} with score ${session.restaurant.score}`,
     );
 
-    // Log decision process
-    console.log(`Scoring complete for session ${code}:`);
-    logs.forEach((log) => console.log(`  > ${log}`));
-
-    // Pick top result
-    // Check if we have any valid results (score > -500 implies not excluded)
-    const validResults = rankedRestaurants.filter((r) => r.score > -500);
-
-    if (validResults.length > 0) {
-      session.restaurant = validResults[0];
-      console.log(
-        `Selected restaurant: ${session.restaurant.name} with score ${session.restaurant.score}`,
-      );
-    } else {
-      // Fallback if all are excluded (should be rare with fallback data, but possible)
-      console.log(
-        "All restaurants excluded by strict dietary restrictions! Picking top ranked anyway but flagging it.",
-      );
-      session.restaurant = rankedRestaurants[0];
-    }
-
-    session.status = "result";
+    session.status = "done";
 
     io.to(code).emit("room:update", session);
   } catch (error) {

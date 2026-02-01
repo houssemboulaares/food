@@ -36,7 +36,11 @@ function SocketNavigation() {
     };
 
     const onRoomUpdate = (updatedSession: Session) => {
-      if (updatedSession.status === "result" && updatedSession.restaurant) {
+      if (
+        (updatedSession.status === "result" ||
+          updatedSession.status === "done") &&
+        updatedSession.restaurant
+      ) {
         console.log("[DEBUG] SocketNavigation: Navigating to results");
         navigate(`/session/${updatedSession.code}/results`);
       }

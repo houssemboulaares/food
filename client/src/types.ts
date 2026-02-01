@@ -26,7 +26,7 @@ export interface Location {
 export interface Session {
   code: string;
   participants: Participant[];
-  status: "waiting" | "deciding" | "result";
+  status: "waiting" | "deciding" | "result" | "done";
   restaurant: Restaurant | null;
   location: Location | null;
   preferences: Record<string, unknown>;

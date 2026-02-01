@@ -31,6 +31,13 @@ io.on('connection', (socket) => {
                 // Session still exists, broadcast update
                 io.to(code).emit('room:update', updatedSession);
                 console.log(`Broadcasted room update after disconnect to ${code}`);
+
+                // Check if all remaining users are ready (if we are in waiting state)
+                const allReady = updatedSession.participants.every(p => p.isReady);
+                if (allReady && updatedSession.participants.length > 0 && updatedSession.status === 'waiting') {
+                    console.log(`All remaining participants ready in ${code}, starting recommendation`);
+                    startRecommendation(code, updatedSession);
+                }
             } else {
                 console.log(`Session ${code} ended (empty)`);
             }

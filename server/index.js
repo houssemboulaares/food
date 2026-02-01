@@ -16,6 +16,22 @@ const io = new Server(server, {
         origin: "*",
         methods: ["GET", "POST"]
     }
+    socket.on('disconnect', () => {
+        const code = socket.data.sessionCode;
+        if (code) {
+            console.log(`User ${socket.id} disconnected from session ${code}`);
+            const updatedSession = removeParticipant(code, socket.id);
+            
+            if (updatedSession) {
+                // Session still exists, broadcast update
+                io.to(code).emit('room:update', updatedSession);
+                console.log(`Broadcasted room update after disconnect to ${code}`);
+            } else {
+                console.log(`Session ${code} ended (empty)`);
+            }
+        }
+    });
+
 });
 
 io.on('connection', (socket) => {
@@ -23,6 +39,7 @@ io.on('connection', (socket) => {
 
     socket.on('create_session', async ({ hostName }) => {
         const session = createSession(socket.id, hostName);
+        socket.data.sessionCode = session.code; // Track session for disconnect
         await socket.join(session.code);
         console.log(`Host ${socket.id} created session ${session.code} and joined room`);
         socket.emit('session_created', session);
@@ -37,6 +54,7 @@ io.on('connection', (socket) => {
             console.log(`Error joining session: ${session.error}`);
             socket.emit('error', session.error);
         } else {
+            socket.data.sessionCode = session.code; // Track session for disconnect
             await socket.join(session.code);
             console.log(`User ${socket.id} joined room ${session.code}`);
             

@@ -31,10 +31,10 @@ const Results = () => {
   const restaurant = session?.restaurant;
 
   useEffect(() => {
-    if (!session || !restaurant) {
+    if (!session) {
       navigate("/");
     }
-  }, [session, restaurant, navigate]);
+  }, [session, navigate]);
 
   if (!restaurant)
     return (

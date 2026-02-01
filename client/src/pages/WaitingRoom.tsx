@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -34,8 +33,24 @@ const WaitingRoom = () => {
 
     const myParticipant = session.participants.find(p => p.id === socket?.id);
     const isHost = myParticipant?.isHost;
-    const readyCount = session.participants.filter(p => p.isReady).length;
+    const hostName = session.participants.find(p => p.isHost)?.name || 'Host';
+    const unreadyParticipants = session.participants.filter(p => !p.isReady);
+    const readyCount = session.participants.length - unreadyParticipants.length;
     const totalCount = session.participants.length;
+
+    const getWaitingMessage = () => {
+        if (session.status === 'deciding') {
+            return "Finding the perfect place for you...";
+        }
+        if (!session.location) {
+            return isHost ? "Choose where to search for food" : `${hostName} is picking a location...`;
+        }
+        if (unreadyParticipants.length === 0) {
+            return "Everyone is ready!";
+        }
+        const names = unreadyParticipants.map(p => p.name).join(', ');
+        return `Waiting for: ${names}`;
+    };
 
     const handleCopyCode = () => {
         navigator.clipboard.writeText(session.code);
@@ -62,14 +77,12 @@ const WaitingRoom = () => {
 
             <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold mb-2">
-                    {!session.location ? (isHost ? "Set Location 📍" : "Waiting for Host...") : 
-                     session.status === 'deciding' ? "Choosing... 🤔" : 
-                     "Who's Hungry? 🍽️"}
+                    {!session.location ? (isHost ? "Set Location 📍" : `Waiting for ${hostName}...`) :
+                        session.status === 'deciding' ? "Choosing... 🤔" :
+                            "Who's Hungry? 🍽️"}
                 </h2>
                 <p className="text-gray-500">
-                    {!session.location ? (isHost ? "Choose where to search for food" : "Host is picking a location") :
-                     readyCount === totalCount ? "Everyone is ready!" :
-                     `Waiting for ${totalCount - readyCount} friend(s)...`}
+                    {getWaitingMessage()}
                 </p>
 
                 <div className="bg-orange-100 text-primary font-bold py-3 px-6 rounded-full inline-flex items-center gap-2 mt-4 cursor-pointer" onClick={handleCopyCode}>
@@ -131,7 +144,7 @@ const WaitingRoom = () => {
                         className="w-full bg-primary text-white font-bold py-4 rounded-full flex items-center justify-center gap-2 shadow-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={!session.location}
                     >
-                        <Utensils /> {session.location ? "I'm Hungry" : "Waiting for Host to set Location..."}
+                        <Utensils /> {session.location ? "I'm Hungry" : `Waiting for ${hostName}...`}
                     </button>
                 ) : (
                     <button className="w-full bg-gray-100 text-gray-400 font-bold py-4 rounded-full cursor-default">

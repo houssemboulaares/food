@@ -4,7 +4,7 @@ import { useSocket } from '../context/SocketContext';
 import { UserPlus, Users } from 'lucide-react';
 
 const Landing = () => {
-    const { createSession, joinSession } = useSocket();
+    const { createSession, joinSession, isConnected } = useSocket();
     const [name, setName] = useState('');
     const [code, setCode] = useState('');
     const [mode, setMode] = useState<'home' | 'join'>('home');
@@ -32,6 +32,11 @@ const Landing = () => {
                 <h1 className="text-4xl font-bold text-text mb-2">Hungry?</h1>
                 <p className="text-gray-500 mb-8">Decide where to eat, <span className="text-primary font-bold">together.</span></p>
 
+                {/* Connection Status Indicator (optional but helpful) */}
+                {!isConnected && (
+                    <div className="text-orange-500 text-sm mb-4">Connecting to server...</div>
+                )}
+
                 {mode === 'home' ? (
                     <div className="space-y-4">
                         <input 
@@ -43,13 +48,15 @@ const Landing = () => {
                         />
                         <button 
                             onClick={handleCreate}
-                            className="w-full bg-primary text-white p-4 rounded-full text-lg font-bold shadow-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+                            disabled={!isConnected}
+                            className="w-full bg-primary text-white p-4 rounded-full text-lg font-bold shadow-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <UserPlus size={24} /> Create Group
                         </button>
                         <button 
                             onClick={() => setMode('join')}
-                            className="w-full text-text font-semibold p-4 flex items-center justify-center gap-2 hover:bg-gray-100 rounded-full transition-colors"
+                            disabled={!isConnected}
+                            className="w-full text-text font-semibold p-4 flex items-center justify-center gap-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Users size={24} /> Join existing group
                         </button>
@@ -72,7 +79,8 @@ const Landing = () => {
                         />
                         <button 
                             onClick={handleJoin}
-                            className="w-full bg-primary text-white p-4 rounded-full text-lg font-bold shadow-lg hover:bg-orange-600 transition-colors"
+                            disabled={!isConnected}
+                            className="w-full bg-primary text-white p-4 rounded-full text-lg font-bold shadow-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Join Group
                         </button>

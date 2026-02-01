@@ -61,8 +61,16 @@ const WaitingRoom = () => {
             </header>
 
             <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold mb-2">Who's Hungry?</h2>
-                <p className="text-gray-500">Wait for your friends to join...</p>
+                <h2 className="text-3xl font-bold mb-2">
+                    {!session.location ? (isHost ? "Set Location 📍" : "Waiting for Host...") : 
+                     session.status === 'deciding' ? "Choosing... 🤔" : 
+                     "Who's Hungry? 🍽️"}
+                </h2>
+                <p className="text-gray-500">
+                    {!session.location ? (isHost ? "Choose where to search for food" : "Host is picking a location") :
+                     readyCount === totalCount ? "Everyone is ready!" :
+                     `Waiting for ${totalCount - readyCount} friend(s)...`}
+                </p>
 
                 <div className="bg-orange-100 text-primary font-bold py-3 px-6 rounded-full inline-flex items-center gap-2 mt-4 cursor-pointer" onClick={handleCopyCode}>
                     <Copy size={18} /> Code: {session.code}

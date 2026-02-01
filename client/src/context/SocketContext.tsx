@@ -3,12 +3,40 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 
-interface Session {
+export interface Participant {
+    id: string;
+    name: string;
+    isHost: boolean;
+    isReady: boolean;
+}
+
+export interface Restaurant {
+    id: string | number;
+    name: string;
+    cuisine: string;
+    price: string;
+    lat: number;
+    lon: number;
+    rating: string;
+    reviews: number;
+    score?: number;
+}
+
+export interface Location {
+    lat: number;
+    lng: number;
+}
+
+export interface Session {
     code: string;
-    participants: any[];
+    participants: Participant[];
     status: 'waiting' | 'deciding' | 'result';
-    restaurant: any;
-    location: any;
+    restaurant: Restaurant | null;
+    location: Location | null;
+    preferences: Record<string, any>;
+    filters: { radius: number };
+    createdAt: number;
+    hostId: string;
 }
 
 interface SocketContextType {
@@ -17,7 +45,7 @@ interface SocketContextType {
     createSession: (hostName: string) => void;
     joinSession: (code: string, userName: string) => void;
     updatePreferences: (prefs: any) => void;
-    updateLocation: (location: any) => void;
+    updateLocation: (location: Location) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -39,8 +67,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             navigate(`/session/${newSession.code}`);
         });
 
-        newSocket.on('room:update', (updatedSession) => {
-            console.log('Room update received by', newSocket.id, 'code:', updatedSession.code, 'participants:', updatedSession.participants?.map((p: any) => p.name));
+        newSocket.on('room:update', (updatedSession: Session) => {
+            console.log('Room update received by', newSocket.id, 'code:', updatedSession.code, 'participants:', updatedSession.participants?.map(p => p.name));
             setSession(updatedSession);
             if (updatedSession.status === 'result') {
                 navigate(`/session/${updatedSession.code}/results`);
@@ -54,7 +82,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return () => {
             newSocket.disconnect();
         };
-    }, []);
+    }, [navigate]);
 
     const createSession = (hostName: string) => {
         socket?.emit('create_session', { hostName });
@@ -70,7 +98,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     };
 
-    const updateLocation = (location: any) => {
+    const updateLocation = (location: Location) => {
         if (session) {
             socket?.emit('update_location', { code: session.code, location });
         }

@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
-import { Session, Location } from '../types';
+import type { Session, Location } from '../types';
 
 interface SocketContextType {
     socket: Socket | null;

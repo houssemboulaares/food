@@ -16,6 +16,11 @@ const io = new Server(server, {
         origin: "*",
         methods: ["GET", "POST"]
     }
+});
+
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
     socket.on('disconnect', () => {
         const code = socket.data.sessionCode;
         if (code) {
@@ -31,11 +36,6 @@ const io = new Server(server, {
             }
         }
     });
-
-});
-
-io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
 
     socket.on('create_session', async ({ hostName }) => {
         const session = createSession(socket.id, hostName);
